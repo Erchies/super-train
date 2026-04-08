@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── TABELAS MESTRES ──────────────────────────────────────────────────────────
+
+model Localizacao {
+  id           String   @id @default(cuid())
+  codigo       String   @unique
+  descricao    String
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  materiais    Material[]
+  equipamentos Equipamento[]
+
+  @@map("localizacoes")
+}
+
+model TUE {
+  id           String   @id @default(cuid())
+  // numero: 101–125 (SERIE_100) | 226–240 (SERIE_200)
+  numero       String   @unique
+  // serie: SERIE_100 | SERIE_200
+  serie        String
+  descricao    String?
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  equipamentosInstalados   Equipamento[]
+  movimentacoesEquipamento MovimentacaoEquipamento[]
+
+  @@map("tues")
+}
+
+// Posicao agora representa os CARROS: MA | MB | RA | RB
+model Posicao {
+  id           String   @id @default(cuid())
+  codigo       String   @unique
+  descricao    String
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Mantido para compatibilidade com dados históricos de movimentações
+  movimentacoesEquipamento MovimentacaoEquipamento[]
+  materiaisPossiveis       MaterialPosicaoPossivel[]
+
+  @@map("posicoes")
+}
+
+// Posições possíveis por Série + Carro + Nome do Equipamento (tipo/modelo) + Posição.
+// Não vinculado a TUE individual — vale para toda a série (SERIE_100 ou SERIE_200).
+// O nome do equipamento agrupa por tipo, independente do n° de série.
+model PosicaoPossivel {
+  id              String   @id @default(cuid())
+  nomeEquipamento String   // descricao do equipamento (agrupa por tipo)
+  serie           String   // SERIE_100 | SERIE_200
+  carro           String   // MA | MB | RA | RB
+  posicao         String   // texto livre, ex: "01", "Painel A", "Rack 02"
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@unique([nomeEquipamento, serie, carro, posicao])
+  @@map("posicoes_possiveis")
+}
+
+model Funcao {
+  id           String   @id @default(cuid())
+  codigo       String   @unique
+  descricao    String
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Mantido para compatibilidade com dados históricos
+  movimentacoesEquipamento MovimentacaoEquipamento[]
+
+  @@map("funcoes")
+}
+
+model Oficina {
+  id           String   @id @default(cuid())
+  nome         String
+  // tipo: INTERNA | EXTERNA | FABRICANTE
+  tipo         String
+  contato      String?
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  movimentacoesEquipamento MovimentacaoEquipamento[]
+
+  @@map("oficinas")
+}
+
+model Atividade {
+  id           String   @id @default(cuid())
+  codigo       String   @unique
+  descricao    String
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  movimentacoesConsumiveis MovimentacaoConsumivel[]
+
+  @@map("atividades")
+}
+
+model Usuario {
+  id           String   @id @default(cuid())
+  nome         String
+  email        String   @unique
+  senhaHash    String
+  // perfil: OPERADOR | SUPERVISOR | ADMIN
+  perfil       String   @default("OPERADOR")
+  ativo        Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  movConsumRealizadas  MovimentacaoConsumivel[]  @relation("MovConsumRealizadoPor")
+  movConsumAutorizadas MovimentacaoConsumivel[]  @relation("MovConsumAutorizadoPor")
+  movEquipRealizadas   MovimentacaoEquipamento[] @relation("MovEquipRealizadoPor")
+  movEquipAutorizadas  MovimentacaoEquipamento[] @relation("MovEquipAutorizadoPor")
+
+  @@map("usuarios")
+}
+
+// ─── ENTIDADES PRINCIPAIS ─────────────────────────────────────────────────────
+
+model Material {
+  id             String  @id @default(cuid())
+  codigoTrensurb String  @unique
+  descricao      String
+  unidade        String
+  estoqueMinimo  Float   @default(0)
+  quantidadeAtual Float  @default(0)
+  localizacaoId  String?
+  observacao     String?
+  ativo          Boolean @default(true)
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  localizacao   Localizacao?            @relation(fields: [localizacaoId], references: [id])
+  movimentacoes MovimentacaoConsumivel[]
+  posicoesPossiveis MaterialPosicaoPossivel[]
+
+  @@map("materiais")
+}
+
+model Equipamento {
+  id               String   @id @default(cuid())
+  numeroSerie      String   @unique
+  codigoTrensurb   String
+  descricao        String
+  // compatibilidade: SERIE_100 | SERIE_200 | AMBAS
+  compatibilidade  String
+  // status: EM_ESTOQUE | INSTALADO_TUE | AGUARDANDO_REPARO | EM_REPARO | SUCATA
+  status           String   @default("EM_ESTOQUE")
+  localizacaoId    String?
+  tueId            String?
+  carro            String?  // MA | MB | RA | RB
+  posicaoInstalada String?  // texto livre validado via PosicaoPossivel
+  observacao       String?
+  ativo            Boolean  @default(true)
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  localizacao       Localizacao?     @relation(fields: [localizacaoId], references: [id])
+  tue               TUE?             @relation(fields: [tueId], references: [id])
+  movimentacoes     MovimentacaoEquipamento[]
+
+  @@map("equipamentos")
+}
+
+model MaterialPosicaoPossivel {
+  materialId String
+  posicaoId  String
+  criadoEm   DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  posicao  Posicao  @relation(fields: [posicaoId], references: [id], onDelete: Cascade)
+
+  @@id([materialId, posicaoId])
+  @@map("materiais_posicoes_possiveis")
+}
+
+// ─── MOVIMENTAÇÕES ────────────────────────────────────────────────────────────
+
+model MovimentacaoConsumivel {
+  id            String   @id @default(cuid())
+  materialId    String
+  // tipo: ENTRADA | SAIDA | AJUSTE_POSITIVO | AJUSTE_NEGATIVO
+  tipo          String
+  quantidade    Float
+  numeroOS      String?
+  numeroChamado String?
+  atividadeId   String?
+  observacao    String?
+  ehExcecao     Boolean  @default(false)
+  justificativa String?
+  autorizadoPor String?
+  realizadoPor  String
+  realizadoEm  DateTime
+  criadoEm     DateTime @default(now())
+
+  material    Material   @relation(fields: [materialId], references: [id])
+  atividade   Atividade? @relation(fields: [atividadeId], references: [id])
+  usuario     Usuario    @relation("MovConsumRealizadoPor", fields: [realizadoPor], references: [id])
+  autorizador Usuario?   @relation("MovConsumAutorizadoPor", fields: [autorizadoPor], references: [id])
+
+  @@map("movimentacoes_consumiveis")
+}
+
+model MovimentacaoEquipamento {
+  id               String   @id @default(cuid())
+  equipamentoId    String
+  // tipo: ENTRADA_ESTOQUE | INSTALACAO_TUE | RETIRADA_TUE_ESTOQUE | ...
+  tipo             String
+  statusAnterior   String?
+  statusNovo       String
+  localizacaoId    String?
+  tueId            String?
+  carro            String?  // MA | MB | RA | RB
+  posicaoInstalada String?  // texto da posição (novo)
+  // Campos legados — mantidos para histórico de movimentações antigas
+  posicaoId        String?
+  funcaoId         String?
+  oficinaId        String?
+  motivoReparo     String?
+  motivoSucata     String?
+  numeroOS         String?
+  numeroChamado    String?
+  observacao       String?
+  ehExcecao        Boolean  @default(false)
+  justificativa    String?
+  autorizadoPor    String?
+  realizadoPor     String
+  realizadoEm     DateTime
+  criadoEm        DateTime @default(now())
+
+  equipamento Equipamento @relation(fields: [equipamentoId], references: [id])
+  tue         TUE?        @relation(fields: [tueId], references: [id])
+  posicao     Posicao?    @relation(fields: [posicaoId], references: [id])
+  funcao      Funcao?     @relation(fields: [funcaoId], references: [id])
+  oficina     Oficina?    @relation(fields: [oficinaId], references: [id])
+  usuario     Usuario     @relation("MovEquipRealizadoPor", fields: [realizadoPor], references: [id])
+  autorizador Usuario?    @relation("MovEquipAutorizadoPor", fields: [autorizadoPor], references: [id])
+
+  @@map("movimentacoes_equipamentos")
+}

@@ -1,0 +1,220 @@
+﻿"use client";
+
+import { type FormEvent, Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { envioReparoAction } from "@/actions/movimento-equipamento.actions";
+import { AlertError } from "@/components/shared/form-error";
+import { PageHeader } from "@/components/shared/page-header";
+
+type Equip = { id: string; numeroSerie: string; descricao: string; status: string };
+type Oficina = { id: string; nome: string; tipo: string };
+
+function EnvioReparoForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const canExcecao = ["SUPERVISOR", "ADMIN"].includes(
+    (session?.user as { perfil?: string })?.perfil ?? ""
+  );
+
+  const [equipamentos, setEquipamentos] = useState<Equip[]>([]);
+  const [oficinas, setOficinas] = useState<Oficina[]>([]);
+
+  const [equipamentoId, setEquipamentoId] = useState(searchParams.get("equipamentoId") ?? "");
+  const [oficinaId, setOficinaId] = useState("");
+  const [motivoReparo, setMotivoReparo] = useState("");
+  const [realizadoEm, setRealizadoEm] = useState(new Date().toISOString().split("T")[0]);
+  const [observacao, setObservacao] = useState("");
+
+  const [ehExcecao, setEhExcecao] = useState(false);
+  const [justificativa, setJustificativa] = useState("");
+
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/equipamentos?status=AGUARDANDO_REPARO").then((r) => r.json()),
+      fetch("/api/cadastros/oficinas").then((r) => r.json()),
+    ]).then(([equips, ofs]) => {
+      setEquipamentos(Array.isArray(equips) ? equips : []);
+      setOficinas(Array.isArray(ofs) ? ofs : []);
+    });
+  }, []);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+
+    const result = await envioReparoAction({
+      equipamentoId,
+      oficinaId,
+      motivoReparo,
+      realizadoEm: new Date(`${realizadoEm}T12:00:00`),
+      observacao: observacao || undefined,
+      ehExcecao,
+      justificativa: justificativa || undefined,
+    });
+
+    if (result.success) {
+      router.push(`/equipamentos/${equipamentoId}`);
+    } else {
+      setError(result.error);
+    }
+
+    setSaving(false);
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Enviar Equipamento para Reparo"
+        breadcrumbs={[{ label: "Movimentações" }, { label: "Envio para Reparo" }]}
+      />
+
+      <div className="mb-4 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        O equipamento deve estar com status <strong>Aguardando Reparo</strong> para ser enviado para a oficina.
+      </div>
+
+      <div className="max-w-2xl rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Equipamento (Aguardando Reparo) <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={equipamentoId}
+              onChange={(e) => setEquipamentoId(e.target.value)}
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">- Selecione -</option>
+              {equipamentos.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.numeroSerie} - {e.descricao}
+                </option>
+              ))}
+            </select>
+            {equipamentos.length === 0 && (
+              <p className="mt-1 text-xs text-amber-600">
+                Nenhum equipamento aguardando reparo. Use "Retirar de TUE para Reparo" primeiro.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Oficina / Fornecedor <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={oficinaId}
+              onChange={(e) => setOficinaId(e.target.value)}
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">- Selecione a oficina -</option>
+              {oficinas.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.nome} ({o.tipo})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Motivo / Descrição do Reparo <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={motivoReparo}
+              onChange={(e) => setMotivoReparo(e.target.value)}
+              required
+              placeholder="Descreva o defeito ou motivo do reparo"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Data de Envio <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={realizadoEm}
+              onChange={(e) => setRealizadoEm(e.target.value)}
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Observação</label>
+            <textarea
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              rows={2}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {canExcecao && (
+            <div className="space-y-3 rounded-md border border-orange-200 bg-orange-50 p-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="exc"
+                  checked={ehExcecao}
+                  onChange={(e) => setEhExcecao(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <label htmlFor="exc" className="text-sm font-medium text-orange-800">
+                  Movimentação em Exceção
+                </label>
+              </div>
+              {ehExcecao && (
+                <textarea
+                  value={justificativa}
+                  onChange={(e) => setJustificativa(e.target.value)}
+                  rows={3}
+                  required={ehExcecao}
+                  placeholder="Justificativa obrigatória..."
+                  className="w-full rounded-md border border-orange-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              )}
+            </div>
+          )}
+
+          <AlertError message={error} />
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-md bg-orange-600 px-5 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+            >
+              {saving ? "Enviando..." : "Confirmar Envio"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded-md border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default function EnvioReparoPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Carregando...</div>}>
+      <EnvioReparoForm />
+    </Suspense>
+  );
+}
+
