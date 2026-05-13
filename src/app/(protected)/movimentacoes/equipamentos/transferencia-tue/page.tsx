@@ -84,7 +84,7 @@ function TransferenciaTueForm() {
 
   // Carros disponíveis: distintos das posições cadastradas, ou todos os válidos se nenhum configurado
   const carrosDisponiveis = posicoesPorContexto.length > 0
-    ? [...new Set(posicoesPorContexto.map((p) => p.carro))].sort()
+    ? Array.from(new Set(posicoesPorContexto.map((p) => p.carro))).sort()
     : (equipamentoId && tueDestinoId ? CARROS_VALIDOS.slice() : []);
 
   // Posições para o carro selecionado
