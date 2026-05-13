@@ -3,6 +3,7 @@ export type DomainErrorCode =
   | "ESTADO_TERMINAL"
   | "SLOT_OCUPADO"
   | "INCOMPATIBILIDADE_SERIE"
+  | "POSICAO_NAO_CADASTRADA"
   | "CAMPO_OBRIGATORIO"
   | "ESTOQUE_INSUFICIENTE"
   | "EXCECAO_NAO_AUTORIZADA"
@@ -15,6 +16,7 @@ export type DomainErrorPayload =
   | { code: "ESTADO_TERMINAL"; status: string }
   | { code: "SLOT_OCUPADO"; tueNumero: string; posicaoCodigo: string; funcaoCodigo: string }
   | { code: "INCOMPATIBILIDADE_SERIE"; equipSerie: string; tueSerie: string }
+  | { code: "POSICAO_NAO_CADASTRADA"; posicao: string }
   | { code: "CAMPO_OBRIGATORIO"; campo: string }
   | { code: "ESTOQUE_INSUFICIENTE"; disponivel: number; solicitado: number }
   | { code: "EXCECAO_NAO_AUTORIZADA" }
@@ -39,6 +41,8 @@ export function formatDomainError(payload: DomainErrorPayload): string {
       return `Posição já ocupada: TUE ${payload.tueNumero} / ${payload.posicaoCodigo} / ${payload.funcaoCodigo}`;
     case "INCOMPATIBILIDADE_SERIE":
       return `Incompatibilidade: equipamento é ${payload.equipSerie} e TUE é ${payload.tueSerie}`;
+    case "POSICAO_NAO_CADASTRADA":
+      return `Posição não cadastrada para este contexto: ${payload.posicao}`;
     case "CAMPO_OBRIGATORIO":
       return `Campo obrigatório: ${payload.campo}`;
     case "ESTOQUE_INSUFICIENTE":
