@@ -3,13 +3,39 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const isProduction = process.env.NODE_ENV === "production";
+
+function getSeedPassword(envName: string, fallback: string) {
+  const password = process.env[envName];
+
+  if (password) {
+    return { password, fromDefault: false };
+  }
+
+  if (isProduction) {
+    throw new Error(
+      `Defina ${envName} antes de executar o seed em producao.`
+    );
+  }
+
+  console.warn(
+    `AVISO: ${envName} nao definido. Usando senha padrao apenas para desenvolvimento.`
+  );
+
+  return { password: fallback, fromDefault: true };
+}
+
 async function main() {
   console.log("🌱 Iniciando seed do banco de dados...");
 
   // ── Usuários ──────────────────────────────────────────────────────────────
-  const senhaAdmin = await bcrypt.hash("admin123", 10);
-  const senhaSupervisor = await bcrypt.hash("sup123", 10);
-  const senhaOperador = await bcrypt.hash("op123", 10);
+  const adminPassword = getSeedPassword("ADMIN_PASSWORD", "admin123");
+  const supervisorPassword = getSeedPassword("SUPERVISOR_PASSWORD", "sup123");
+  const operadorPassword = getSeedPassword("OPERADOR_PASSWORD", "op123");
+
+  const senhaAdmin = await bcrypt.hash(adminPassword.password, 10);
+  const senhaSupervisor = await bcrypt.hash(supervisorPassword.password, 10);
+  const senhaOperador = await bcrypt.hash(operadorPassword.password, 10);
 
   await prisma.usuario.upsert({
     where: { email: "admin@trensurb.com" },
@@ -140,9 +166,30 @@ async function main() {
 
   console.log("✅ Seed concluído com sucesso!");
   console.log("\n📋 Usuários criados:");
-  console.log("  Admin:      admin@trensurb.com     / admin123");
-  console.log("  Supervisor: supervisor@trensurb.com / sup123");
-  console.log("  Operador:   operador@trensurb.com   / op123");
+  console.log(
+    `  Admin:      admin@trensurb.com     / ${
+      adminPassword.fromDefault ? "admin123" : "ADMIN_PASSWORD"
+    }`
+  );
+  console.log(
+    `  Supervisor: supervisor@trensurb.com / ${
+      supervisorPassword.fromDefault ? "sup123" : "SUPERVISOR_PASSWORD"
+    }`
+  );
+  console.log(
+    `  Operador:   operador@trensurb.com   / ${
+      operadorPassword.fromDefault ? "op123" : "OPERADOR_PASSWORD"
+    }`
+  );
+  if (
+    adminPassword.fromDefault ||
+    supervisorPassword.fromDefault ||
+    operadorPassword.fromDefault
+  ) {
+    console.warn(
+      "\nAVISO: troque as senhas padrao antes de usar este sistema fora do desenvolvimento."
+    );
+  }
   console.log("\n🚃 TUEs:");
   console.log("  Série 100: 101–125 (25 TUEs)");
   console.log("  Série 200: 226–240 (15 TUEs)");

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── TABELAS MESTRES ──────────────────────────────────────────────────────────
@@ -36,6 +37,12 @@ model TUE {
 
   equipamentosInstalados   Equipamento[]
   movimentacoesEquipamento MovimentacaoEquipamento[]
+  viasRelatorioTurno       RelatorioTurnoVia[]
+  atendimentosTurno        AtendimentoTurno[]
+  falhasNivelC             FalhaNivelC[]
+  solicitacoesTorre        SolicitacaoTorreCco[]
+  orientacoesContratada    OrientacaoContratada[]
+  pendenciasTurno          PendenciaTurno[]
 
   @@map("tues")
 }
@@ -52,6 +59,7 @@ model Posicao {
   // Mantido para compatibilidade com dados históricos de movimentações
   movimentacoesEquipamento MovimentacaoEquipamento[]
   materiaisPossiveis       MaterialPosicaoPossivel[]
+  equipamentosLegados      Equipamento[]              @relation("EquipamentoPosicaoLegada")
 
   @@map("posicoes")
 }
@@ -83,6 +91,7 @@ model Funcao {
 
   // Mantido para compatibilidade com dados históricos
   movimentacoesEquipamento MovimentacaoEquipamento[]
+  equipamentosLegados      Equipamento[]              @relation("EquipamentoFuncaoLegada")
 
   @@map("funcoes")
 }
@@ -130,6 +139,7 @@ model Usuario {
   movConsumAutorizadas MovimentacaoConsumivel[]  @relation("MovConsumAutorizadoPor")
   movEquipRealizadas   MovimentacaoEquipamento[] @relation("MovEquipRealizadoPor")
   movEquipAutorizadas  MovimentacaoEquipamento[] @relation("MovEquipAutorizadoPor")
+  relatoriosTurno      RelatorioTurno[]          @relation("RelatorioTurnoResponsavel")
 
   @@map("usuarios")
 }
@@ -167,6 +177,8 @@ model Equipamento {
   status           String   @default("EM_ESTOQUE")
   localizacaoId    String?
   tueId            String?
+  posicaoId        String?
+  funcaoId         String?
   carro            String?  // MA | MB | RA | RB
   posicaoInstalada String?  // texto livre validado via PosicaoPossivel
   observacao       String?
@@ -176,6 +188,8 @@ model Equipamento {
 
   localizacao       Localizacao?     @relation(fields: [localizacaoId], references: [id])
   tue               TUE?             @relation(fields: [tueId], references: [id])
+  posicaoLegada     Posicao?         @relation("EquipamentoPosicaoLegada", fields: [posicaoId], references: [id])
+  funcaoLegada      Funcao?          @relation("EquipamentoFuncaoLegada", fields: [funcaoId], references: [id])
   movimentacoes     MovimentacaoEquipamento[]
 
   @@map("equipamentos")
@@ -256,4 +270,194 @@ model MovimentacaoEquipamento {
   autorizador Usuario?    @relation("MovEquipAutorizadoPor", fields: [autorizadoPor], references: [id])
 
   @@map("movimentacoes_equipamentos")
+}
+
+// RELATORIO DE TURNO - PLANTAO CORRETIVA SEOFI
+
+model RelatorioTurno {
+  id                   String    @id @default(cuid())
+  data                 DateTime
+  turno                String
+  responsavelId        String?
+  responsavelNome      String
+  equipeTrensurb       String?
+  equipeTerceirizada   String?
+  condicoesGeraisTurno String?
+  observacoesGerais    String?
+  status               String    @default("ABERTO")
+  criadoEm             DateTime  @default(now())
+  atualizadoEm         DateTime  @updatedAt
+  fechadoEm            DateTime?
+  canceladoEm          DateTime?
+
+  responsavel          Usuario?               @relation("RelatorioTurnoResponsavel", fields: [responsavelId], references: [id])
+  vias                 RelatorioTurnoVia[]
+  atendimentos         AtendimentoTurno[]
+  falhasNivelC         FalhaNivelC[]
+  solicitacoesTorre    SolicitacaoTorreCco[]
+  orientacoesContratada OrientacaoContratada[]
+  pendencias           PendenciaTurno[]
+
+  @@index([data, turno, status])
+  @@map("relatorios_turno")
+}
+
+model RelatorioTurnoVia {
+  id                 String   @id @default(cuid())
+  relatorioTurnoId   String
+  via                String
+  tueId              String?
+  tueNumero          String?
+  horarioEntrada     DateTime?
+  horarioSaida       DateTime?
+  motivoPermanencia  String?
+  numeroOS           String?
+  numeroPI           String?
+  numeroTicket       String?
+  statusVia          String   @default("LIVRE")
+  equipeResponsavel  String?
+  observacao         String?
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
+
+  relatorioTurno     RelatorioTurno @relation(fields: [relatorioTurnoId], references: [id], onDelete: Cascade)
+  tue                TUE?           @relation(fields: [tueId], references: [id])
+
+  @@unique([relatorioTurnoId, via])
+  @@index([statusVia])
+  @@map("relatorio_turno_vias")
+}
+
+model AtendimentoTurno {
+  id                    String   @id @default(cuid())
+  relatorioTurnoId      String
+  tipoRegistro          String
+  numeroRegistro        String
+  tueId                 String?
+  tueNumero             String?
+  carro                 String?
+  sistema               String?
+  equipamento           String?
+  sintomaInformado      String
+  diagnosticoEncontrado String?
+  servicoExecutado      String?
+  materialUtilizado     String?
+  equipeExecutante      String?
+  situacaoFinal         String
+  observacaoProximoTurno String?
+  criadoEm              DateTime @default(now())
+  atualizadoEm          DateTime @updatedAt
+
+  relatorioTurno        RelatorioTurno @relation(fields: [relatorioTurnoId], references: [id], onDelete: Cascade)
+  tue                   TUE?           @relation(fields: [tueId], references: [id])
+
+  @@index([relatorioTurnoId, situacaoFinal])
+  @@index([numeroRegistro])
+  @@map("atendimentos_turno")
+}
+
+model FalhaNivelC {
+  id                          String    @id @default(cuid())
+  relatorioTurnoId            String?
+  numeroOS                    String?
+  numeroPI                    String?
+  numeroTicket                String?
+  tueId                       String?
+  tueNumero                   String?
+  origemFalha                 String
+  descricaoFalha              String
+  dataAbertura                DateTime
+  prioridade                  String
+  acaoNecessaria              String?
+  necessitaRecolhimento       Boolean   @default(false)
+  recolhimentoSolicitado      Boolean   @default(false)
+  horarioSolicitacaoTorre     DateTime?
+  retornoTorre                String    @default("NAO_SOLICITADO")
+  motivoNaoExecucao           String?
+  responsavelAcompanhamento   String?
+  status                      String    @default("PENDENTE")
+  dataConclusao               DateTime?
+  observacao                  String?
+  criadoEm                    DateTime  @default(now())
+  atualizadoEm                DateTime  @updatedAt
+
+  relatorioTurno              RelatorioTurno?      @relation(fields: [relatorioTurnoId], references: [id], onDelete: SetNull)
+  tue                         TUE?                 @relation(fields: [tueId], references: [id])
+  solicitacoesTorre           SolicitacaoTorreCco[]
+
+  @@index([status, prioridade])
+  @@index([tueId])
+  @@map("falhas_nivel_c")
+}
+
+model SolicitacaoTorreCco {
+  id                       String   @id @default(cuid())
+  relatorioTurnoId         String
+  horarioSolicitacao       DateTime
+  tueId                    String?
+  tueNumero                String?
+  motivoSolicitacao        String
+  solicitadoPara           String?
+  retorno                  String
+  resultado                String
+  relacionadoFalhaNivelCId String?
+  observacao               String?
+  criadoEm                 DateTime @default(now())
+  atualizadoEm             DateTime @updatedAt
+
+  relatorioTurno           RelatorioTurno @relation(fields: [relatorioTurnoId], references: [id], onDelete: Cascade)
+  tue                      TUE?           @relation(fields: [tueId], references: [id])
+  falhaNivelC              FalhaNivelC?   @relation(fields: [relacionadoFalhaNivelCId], references: [id], onDelete: SetNull)
+
+  @@index([retorno, resultado])
+  @@map("solicitacoes_torre_cco")
+}
+
+model OrientacaoContratada {
+  id                         String   @id @default(cuid())
+  relatorioTurnoId           String
+  horario                    DateTime
+  tecnicoOuEquipeOrientada   String
+  empresa                    String?
+  orientacaoRepassada        String
+  motivoOrientacao           String?
+  responsavelOrientacao      String
+  tueId                      String?
+  tueNumero                  String?
+  numeroOS                   String?
+  retornoContratada          String
+  observacao                 String?
+  criadoEm                   DateTime @default(now())
+  atualizadoEm               DateTime @updatedAt
+
+  relatorioTurno             RelatorioTurno @relation(fields: [relatorioTurnoId], references: [id], onDelete: Cascade)
+  tue                        TUE?           @relation(fields: [tueId], references: [id])
+
+  @@index([retornoContratada])
+  @@map("orientacoes_contratada")
+}
+
+model PendenciaTurno {
+  id                 String   @id @default(cuid())
+  relatorioTurnoId   String
+  prioridade         String
+  tueId              String?
+  tueNumero          String?
+  numeroOS           String?
+  numeroPI           String?
+  numeroTicket       String?
+  pendencia          String
+  motivoPendencia    String
+  acaoRecomendada    String?
+  responsavel        String?
+  status             String   @default("PENDENTE")
+  observacao         String?
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
+
+  relatorioTurno     RelatorioTurno @relation(fields: [relatorioTurnoId], references: [id], onDelete: Cascade)
+  tue                TUE?           @relation(fields: [tueId], references: [id])
+
+  @@index([status, prioridade])
+  @@map("pendencias_turno")
 }
