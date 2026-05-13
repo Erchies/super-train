@@ -39,17 +39,17 @@ async function main() {
 
   await prisma.usuario.upsert({
     where: { email: "admin@trensurb.com" },
-    update: {},
+    update: { nome: "Administrador", senhaHash: senhaAdmin, perfil: "ADMIN", ativo: true },
     create: { nome: "Administrador", email: "admin@trensurb.com", senhaHash: senhaAdmin, perfil: "ADMIN" },
   });
   await prisma.usuario.upsert({
     where: { email: "supervisor@trensurb.com" },
-    update: {},
+    update: { nome: "Supervisor Manutenção", senhaHash: senhaSupervisor, perfil: "SUPERVISOR", ativo: true },
     create: { nome: "Supervisor Manutenção", email: "supervisor@trensurb.com", senhaHash: senhaSupervisor, perfil: "SUPERVISOR" },
   });
   await prisma.usuario.upsert({
     where: { email: "operador@trensurb.com" },
-    update: {},
+    update: { nome: "Operador Estoque", senhaHash: senhaOperador, perfil: "OPERADOR", ativo: true },
     create: { nome: "Operador Estoque", email: "operador@trensurb.com", senhaHash: senhaOperador, perfil: "OPERADOR" },
   });
 
