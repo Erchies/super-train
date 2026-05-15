@@ -1,4 +1,4 @@
-﻿-- CreateTable
+-- CreateTable
 CREATE TABLE "localizacoes" (
     "id" TEXT NOT NULL,
     "codigo" TEXT NOT NULL,
