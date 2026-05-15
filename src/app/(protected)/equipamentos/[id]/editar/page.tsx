@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { ReferenciaSerieUploadCard } from "@/components/equipamentos/referencia-serie-upload-card";
 import { LABELS_SISTEMA_EQUIPAMENTO, SISTEMAS_EQUIPAMENTO, withValorAtual } from "@/lib/catalogos";
 
 type Localizacao = { id: string; codigo: string; descricao: string };
@@ -211,6 +212,10 @@ export default function EditarEquipamentoPage() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="mt-6 max-w-2xl">
+        <ReferenciaSerieUploadCard nomeEquipamento={descricao} />
       </div>
     </div>
   );

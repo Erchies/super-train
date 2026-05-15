@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { envioReparoAction } from "@/actions/movimento-equipamento.actions";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { SerialReferenceHelp } from "@/components/equipamentos/serial-reference-help";
 
 type Equip = { id: string; numeroSerie: string; descricao: string; status: string };
 type Oficina = { id: string; nome: string; tipo: string };
@@ -42,6 +43,7 @@ function EnvioReparoForm() {
       setOficinas(Array.isArray(ofs) ? ofs : []);
     });
   }, []);
+  const equipSel = equipamentos.find((e) => e.id === equipamentoId);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -103,6 +105,8 @@ function EnvioReparoForm() {
               </p>
             )}
           </div>
+
+          <SerialReferenceHelp nomeEquipamento={equipSel?.descricao} />
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">

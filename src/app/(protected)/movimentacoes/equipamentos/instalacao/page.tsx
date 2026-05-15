@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { instalarEquipamentoAction } from "@/actions/movimento-equipamento.actions";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { SerialReferenceHelp } from "@/components/equipamentos/serial-reference-help";
 import { CARROS_VALIDOS } from "@/domain/equipment/validations";
 
 type Equip = {
@@ -158,6 +159,8 @@ function InstalacaoForm() {
               </p>
             )}
           </div>
+
+          <SerialReferenceHelp nomeEquipamento={equipSel?.descricao} />
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">

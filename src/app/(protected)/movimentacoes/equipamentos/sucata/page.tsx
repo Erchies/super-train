@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { baixaSucataAction } from "@/actions/movimento-equipamento.actions";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { SerialReferenceHelp } from "@/components/equipamentos/serial-reference-help";
 
 type Equip = { id: string; numeroSerie: string; descricao: string; status: string };
 
@@ -98,6 +99,8 @@ function SucataForm() {
               ))}
             </select>
           </div>
+
+          <SerialReferenceHelp nomeEquipamento={equipSel?.descricao} />
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">

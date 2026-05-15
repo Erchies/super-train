@@ -9,6 +9,7 @@ import {
 } from "@/actions/movimento-equipamento.actions";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { SerialReferenceHelp } from "@/components/equipamentos/serial-reference-help";
 
 type Equip = {
   id: string;
@@ -54,6 +55,7 @@ function RetiradaForm() {
       setLocalizacoes(Array.isArray(locs) ? locs : []);
     });
   }, []);
+  const equipSel = equipamentos.find((e) => e.id === equipamentoId);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -111,6 +113,8 @@ function RetiradaForm() {
               ))}
             </select>
           </div>
+
+          <SerialReferenceHelp nomeEquipamento={equipSel?.descricao} />
 
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">

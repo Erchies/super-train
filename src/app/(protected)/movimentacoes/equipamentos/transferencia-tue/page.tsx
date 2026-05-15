@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { transferenciaTueAction } from "@/actions/movimento-equipamento.actions";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { SerialReferenceHelp } from "@/components/equipamentos/serial-reference-help";
 import { CARROS_VALIDOS } from "@/domain/equipment/validations";
 
 type Equip = {
@@ -89,6 +90,7 @@ function TransferenciaTueForm() {
 
   // Posições para o carro selecionado
   const posicoesDisponiveis = posicoesPorContexto.filter((p) => p.carro === carro);
+  const equipSel = equipamentos.find((e) => e.id === equipamentoId);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -144,6 +146,8 @@ function TransferenciaTueForm() {
               ))}
             </select>
           </div>
+
+          <SerialReferenceHelp nomeEquipamento={equipSel?.descricao} />
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">

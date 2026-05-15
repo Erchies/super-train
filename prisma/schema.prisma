@@ -196,6 +196,21 @@ model Equipamento {
   @@map("equipamentos")
 }
 
+model EquipamentoReferenciaSerie {
+  id              String   @id @default(cuid())
+  nomeEquipamento String   @unique
+  imagemUrl       String
+  storageProvider String   @default("local")
+  storageKey      String
+  nomeOriginal    String
+  mimeType        String
+  tamanhoBytes    Int
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@map("equipamentos_referencias_serie")
+}
+
 model MaterialPosicaoPossivel {
   materialId String
   posicaoId  String
