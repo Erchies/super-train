@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resettingAdmin, setResettingAdmin] = useState(false);
+  const isDev = process.env.NODE_ENV !== "production";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,7 +19,7 @@ export default function LoginPage() {
     setError("");
 
     const result = await signIn("credentials", {
-      email,
+      email: email.trim().toLowerCase(),
       password,
       redirect: false,
     });
@@ -29,6 +31,22 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     }
+  }
+
+  async function resetAdminDev() {
+    setResettingAdmin(true);
+    setError("");
+
+    const response = await fetch("/api/dev/reset-admin", { method: "POST" });
+    if (!response.ok) {
+      setError("Não foi possível resetar o admin de desenvolvimento");
+      setResettingAdmin(false);
+      return;
+    }
+
+    setEmail("admin@trensurb.com");
+    setPassword("ADMIN");
+    setResettingAdmin(false);
   }
 
   return (
@@ -79,6 +97,17 @@ export default function LoginPage() {
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
+
+            {isDev && (
+              <button
+                type="button"
+                onClick={resetAdminDev}
+                disabled={resettingAdmin || loading}
+                className="w-full border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resettingAdmin ? "Resetando admin..." : "Resetar admin DEV"}
+              </button>
+            )}
           </form>
         </div>
       </div>

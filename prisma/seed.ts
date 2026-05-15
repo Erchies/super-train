@@ -29,7 +29,7 @@ async function main() {
   console.log("🌱 Iniciando seed do banco de dados...");
 
   // ── Usuários ──────────────────────────────────────────────────────────────
-  const adminPassword = getSeedPassword("ADMIN_PASSWORD", "admin123");
+  const adminPassword = getSeedPassword("ADMIN_PASSWORD", "ADMIN");
   const supervisorPassword = getSeedPassword("SUPERVISOR_PASSWORD", "sup123");
   const operadorPassword = getSeedPassword("OPERADOR_PASSWORD", "op123");
 
@@ -166,11 +166,7 @@ async function main() {
 
   console.log("✅ Seed concluído com sucesso!");
   console.log("\n📋 Usuários criados:");
-  console.log(
-    `  Admin:      admin@trensurb.com     / ${
-      adminPassword.fromDefault ? "admin123" : "ADMIN_PASSWORD"
-    }`
-  );
+  console.log(`  Admin: admin@trensurb.com / ${adminPassword.fromDefault ? "ADMIN" : "ADMIN_PASSWORD"}`);
   console.log(
     `  Supervisor: supervisor@trensurb.com / ${
       supervisorPassword.fromDefault ? "sup123" : "SUPERVISOR_PASSWORD"

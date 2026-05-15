@@ -20,9 +20,10 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials.email.trim().toLowerCase();
 
         const usuario = await prisma.usuario.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!usuario || !usuario.ativo) return null;

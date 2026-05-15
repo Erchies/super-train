@@ -11,6 +11,7 @@ import {
   FileUp,
   FolderOpen,
   LayoutDashboard,
+  ClipboardList,
   Package,
   Search,
   Shield,
@@ -65,6 +66,7 @@ const navItems: NavItem[] = [
       { label: "Posições", href: "/cadastros/posicoes" },
       { label: "Oficinas", href: "/cadastros/oficinas" },
       { label: "Atividades", href: "/cadastros/atividades" },
+      { label: "Usuários", href: "/cadastros/usuarios" },
     ],
   },
   {
@@ -83,6 +85,17 @@ const navItems: NavItem[] = [
     children: [
       { label: "Relatório Diário", href: "/importacao/relatorio-diario" },
       { label: "Levantamento de Estoque", href: "/importacao/levantamento" },
+    ],
+  },
+  {
+    label: "Relatórios de Turno",
+    icon: ClipboardList,
+    children: [
+      { label: "Lista de relatórios", href: "/relatorios-turno" },
+      { label: "Novo relatório", href: "/relatorios-turno/novo" },
+      { label: "Abertos/em andamento", href: "/relatorios-turno/abertos" },
+      { label: "Falhas nível C pendentes", href: "/relatorios-turno/falhas-nivel-c" },
+      { label: "Dashboard do plantão", href: "/relatorios-turno/dashboard" },
     ],
   },
   { label: "Auditoria", href: "/auditoria", icon: Shield },
