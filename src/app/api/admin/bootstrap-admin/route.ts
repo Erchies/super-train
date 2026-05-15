@@ -13,23 +13,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
-  const senhaHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  await prisma.usuario.upsert({
-    where: { email: ADMIN_EMAIL },
-    update: {
-      nome: "Administrador",
-      senhaHash,
-      perfil: "ADMIN",
-      ativo: true,
-    },
-    create: {
-      nome: "Administrador",
-      email: ADMIN_EMAIL,
-      senhaHash,
-      perfil: "ADMIN",
-      ativo: true,
-    },
-  });
+  try {
+    const senhaHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    await prisma.usuario.upsert({
+      where: { email: ADMIN_EMAIL },
+      update: {
+        nome: "Administrador",
+        senhaHash,
+        perfil: "ADMIN",
+        ativo: true,
+      },
+      create: {
+        nome: "Administrador",
+        email: ADMIN_EMAIL,
+        senhaHash,
+        perfil: "ADMIN",
+        ativo: true,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Erro ao criar/resetar admin",
+        detail: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     success: true,
