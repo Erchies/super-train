@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { UNIDADES_MEDIDA, withValorAtual } from "@/lib/catalogos";
 
 type Localizacao = { id: string; codigo: string; descricao: string };
 type Posicao = { id: string; codigo: string; descricao: string };
@@ -94,6 +95,7 @@ export default function EditarMaterialPage() {
   }
 
   if (loading) return <div className="p-8 text-center text-gray-500">Carregando...</div>;
+  const unidadesOptions = withValorAtual(UNIDADES_MEDIDA, unidade);
 
   return (
     <div>
@@ -134,13 +136,18 @@ export default function EditarMaterialPage() {
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Unidade <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 value={unidade}
                 onChange={(e) => setUnidade(e.target.value)}
                 required
-                placeholder="Ex: UN, MT, KG"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                {unidadesOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">

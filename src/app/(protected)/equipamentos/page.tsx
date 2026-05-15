@@ -2,6 +2,7 @@
 import { listarEquipamentos } from "@/repositories/equipamento.repository";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { LABELS_SISTEMA_EQUIPAMENTO } from "@/lib/catalogos";
 import { LABELS_COMPATIBILIDADE, LABELS_STATUS_EQUIPAMENTO } from "@/lib/utils";
 import { Search } from "lucide-react";
 
@@ -125,6 +126,7 @@ export default async function EquipamentosPage({ searchParams }: PageProps) {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">N° Série</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Cód. Trensurb</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Descrição</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Sistema</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Série</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Localização / TUE</th>
@@ -137,6 +139,9 @@ export default async function EquipamentosPage({ searchParams }: PageProps) {
                     <td className="px-4 py-3 font-mono text-gray-900">{eq.numeroSerie}</td>
                     <td className="px-4 py-3 text-gray-600">{eq.codigoTrensurb || "-"}</td>
                     <td className="max-w-xs truncate px-4 py-3 text-gray-900">{eq.descricao}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {LABELS_SISTEMA_EQUIPAMENTO[(eq as any).sistema] ?? (eq as any).sistema ?? "-"}
+                    </td>
                     <td className="px-4 py-3 text-gray-600">
                       {LABELS_COMPATIBILIDADE[eq.compatibilidade as keyof typeof LABELS_COMPATIBILIDADE] ?? eq.compatibilidade ?? "-"}
                     </td>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { criarMaterialAction } from "@/actions/material.actions";
+import { UNIDADES_MEDIDA } from "@/lib/catalogos";
 
 interface Localizacao {
   id: string;
@@ -132,14 +133,19 @@ export default function NovoMaterialPage() {
               <label htmlFor="unidade" className="mb-1 block text-sm font-medium text-gray-700">
                 Unidade de Medida <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 id="unidade"
                 name="unidade"
-                type="text"
                 required
-                placeholder="Ex: UN, KG, LT, MT, CX"
+                defaultValue="UN"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              >
+                {UNIDADES_MEDIDA.map((unidade) => (
+                  <option key={unidade} value={unidade}>
+                    {unidade}
+                  </option>
+                ))}
+              </select>
               {fieldErrors.unidade && <p className="mt-1 text-xs text-red-600">{fieldErrors.unidade[0]}</p>}
             </div>
 

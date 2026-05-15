@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SISTEMAS_EQUIPAMENTO } from "@/lib/catalogos";
 
 // Carros válidos
 export const CARROS_VALIDOS = ["MA", "MB", "RA", "RB"] as const;
@@ -14,6 +15,9 @@ export const equipamentoSchema = z.object({
   numeroSerie: z.string().min(1, "Número de série obrigatório").max(100).trim(),
   codigoTrensurb: z.string().min(1, "Código Trensurb obrigatório").max(50).trim(),
   descricao: z.string().min(1, "Descrição obrigatória").max(255).trim(),
+  sistema: z.enum(SISTEMAS_EQUIPAMENTO, {
+    errorMap: () => ({ message: "Sistema obrigatório" }),
+  }).default("OUTROS"),
   compatibilidade: z.enum(["SERIE_100", "SERIE_200", "AMBAS"], {
     errorMap: () => ({ message: "Compatibilidade obrigatória" }),
   }),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { LABELS_SISTEMA_EQUIPAMENTO, SISTEMAS_EQUIPAMENTO, UNIDADES_MEDIDA } from "@/lib/catalogos";
 
 export async function GET(
   _req: NextRequest,
@@ -70,25 +71,29 @@ export async function GET(
 
     // Sheet 2: Equipamentos
     const equipamentos = [
-      ["Nº Série", "Código Trensurb", "Descrição", "Compatibilidade", "Status", "Código Localização", "Nº TUE", "Posição", "Função", "Observação"],
-      ["SN-001-2024", "EQ-COMP-001", "Compressor de Tração", "SERIE_100", "EM_ESTOQUE", "DEP-01", "", "", "", ""],
-      ["SN-002-2024", "EQ-INV-001", "Inversor de Frequência", "SERIE_200", "INSTALADO_TUE", "", "201", "CAR-A", "INV-TRAC", ""],
+      ["Nº Série", "Código Trensurb", "Descrição", "Sistema", "Compatibilidade", "Status", "Código Localização", "Nº TUE", "Posição", "Função", "Observação"],
+      ["SN-001-2024", "EQ-COMP-001", "Compressor de Tração", "TRACAO", "SERIE_100", "EM_ESTOQUE", "DEP-01", "", "", "", ""],
+      ["SN-002-2024", "EQ-INV-001", "Inversor de Frequência", "TRACAO", "SERIE_200", "INSTALADO_TUE", "", "201", "CAR-A", "INV-TRAC", ""],
     ];
     const ws2 = XLSX.utils.aoa_to_sheet(equipamentos);
-    ws2["!cols"] = [{ wch: 14 }, { wch: 16 }, { wch: 30 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 30 }];
+    ws2["!cols"] = [{ wch: 14 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, ws2, "Equipamentos");
 
     // Sheet 3: Referência
     const ref = [
-      ["Compatibilidade", "", "Status Equipamento"],
-      ["SERIE_100", "", "EM_ESTOQUE"],
-      ["SERIE_200", "", "INSTALADO_TUE"],
-      ["AMBAS", "", "AGUARDANDO_REPARO"],
-      ["", "", "EM_REPARO"],
-      ["", "", "SUCATA"],
+      ["Unidades", "", "Sistemas", "", "Compatibilidade", "", "Status Equipamento"],
+      ...Array.from({ length: Math.max(UNIDADES_MEDIDA.length, SISTEMAS_EQUIPAMENTO.length, 5) }).map((_, index) => [
+        UNIDADES_MEDIDA[index] ?? "",
+        "",
+        SISTEMAS_EQUIPAMENTO[index] ? `${SISTEMAS_EQUIPAMENTO[index]} - ${LABELS_SISTEMA_EQUIPAMENTO[SISTEMAS_EQUIPAMENTO[index]]}` : "",
+        "",
+        ["SERIE_100", "SERIE_200", "AMBAS"][index] ?? "",
+        "",
+        ["EM_ESTOQUE", "INSTALADO_TUE", "AGUARDANDO_REPARO", "EM_REPARO", "SUCATA"][index] ?? "",
+      ]),
     ];
     const ws3 = XLSX.utils.aoa_to_sheet(ref);
-    ws3["!cols"] = [{ wch: 16 }, { wch: 4 }, { wch: 22 }];
+    ws3["!cols"] = [{ wch: 16 }, { wch: 4 }, { wch: 28 }, { wch: 4 }, { wch: 16 }, { wch: 4 }, { wch: 22 }];
     XLSX.utils.book_append_sheet(wb, ws3, "Referência");
 
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });

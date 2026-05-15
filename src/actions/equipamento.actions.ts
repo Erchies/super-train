@@ -20,6 +20,7 @@ function normalizeEquipamentoInput(data: unknown) {
       numeroSerie: String(data.get("numeroSerie") ?? ""),
       codigoTrensurb: String(data.get("codigoTrensurb") ?? ""),
       descricao: String(data.get("descricao") ?? ""),
+      sistema: String(data.get("sistema") ?? "OUTROS").trim().toUpperCase() || "OUTROS",
       compatibilidade: String(data.get("compatibilidade") ?? ""),
       localizacaoId: data.get("localizacaoId") ? String(data.get("localizacaoId")) : null,
       posicoesPossiveisIds,
@@ -37,6 +38,9 @@ function normalizeEquipamentoInput(data: unknown) {
 
   return {
     ...obj,
+    ...(Object.prototype.hasOwnProperty.call(obj, "sistema")
+      ? { sistema: String(obj.sistema ?? "OUTROS").trim().toUpperCase() || "OUTROS" }
+      : {}),
     ...(Object.prototype.hasOwnProperty.call(obj, "localizacaoId")
       ? { localizacaoId: obj.localizacaoId ? String(obj.localizacaoId) : null }
       : {}),

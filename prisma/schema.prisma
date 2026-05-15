@@ -171,6 +171,7 @@ model Equipamento {
   numeroSerie      String   @unique
   codigoTrensurb   String
   descricao        String
+  sistema          String   @default("OUTROS")
   // compatibilidade: SERIE_100 | SERIE_200 | AMBAS
   compatibilidade  String
   // status: EM_ESTOQUE | INSTALADO_TUE | AGUARDANDO_REPARO | EM_REPARO | SUCATA

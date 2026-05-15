@@ -84,6 +84,7 @@ export async function criarEquipamento(data: {
   numeroSerie: string;
   codigoTrensurb: string;
   descricao: string;
+  sistema?: string;
   compatibilidade: "SERIE_100" | "SERIE_200" | "AMBAS";
   localizacaoId?: string | null;
   observacao?: string | null;
@@ -96,6 +97,7 @@ export async function atualizarEquipamento(
   data: {
     codigoTrensurb?: string;
     descricao?: string;
+    sistema?: string;
     compatibilidade?: "SERIE_100" | "SERIE_200" | "AMBAS";
     status?: string;
     localizacaoId?: string | null;

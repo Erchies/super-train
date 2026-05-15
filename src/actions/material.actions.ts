@@ -19,7 +19,7 @@ function normalizeMaterialInput(data: unknown) {
     return {
       codigoTrensurb: String(data.get("codigoTrensurb") ?? ""),
       descricao: String(data.get("descricao") ?? ""),
-      unidade: String(data.get("unidade") ?? ""),
+      unidade: String(data.get("unidade") ?? "").trim().toUpperCase(),
       estoqueMinimo: data.get("estoqueMinimo") ? String(data.get("estoqueMinimo")) : "0",
       localizacaoId: data.get("localizacaoId") ? String(data.get("localizacaoId")) : null,
       posicoesPossiveisIds,
@@ -37,6 +37,9 @@ function normalizeMaterialInput(data: unknown) {
 
   return {
     ...obj,
+    ...(Object.prototype.hasOwnProperty.call(obj, "unidade")
+      ? { unidade: String(obj.unidade ?? "").trim().toUpperCase() }
+      : {}),
     ...(Object.prototype.hasOwnProperty.call(obj, "localizacaoId")
       ? { localizacaoId: obj.localizacaoId ? String(obj.localizacaoId) : null }
       : {}),

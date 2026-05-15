@@ -4,6 +4,7 @@ import { ArrowLeftRight, Pencil } from "lucide-react";
 import { buscarEquipamentoPorId } from "@/repositories/equipamento.repository";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { LABELS_SISTEMA_EQUIPAMENTO } from "@/lib/catalogos";
 import {
   formatDate,
   formatDateTime,
@@ -115,6 +116,13 @@ export default async function EquipamentoDetailPage({ params }: { params: { id: 
             <p className="text-xs uppercase tracking-wide text-gray-500">Compatibilidade</p>
             <p className="mt-0.5 font-medium text-gray-900">
               {LABELS_COMPATIBILIDADE[equip.compatibilidade] ?? equip.compatibilidade}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-500">Sistema</p>
+            <p className="mt-0.5 font-medium text-gray-900">
+              {LABELS_SISTEMA_EQUIPAMENTO[(equip as any).sistema] ?? (equip as any).sistema ?? "Outros"}
             </p>
           </div>
 

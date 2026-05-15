@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AlertError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { LABELS_SISTEMA_EQUIPAMENTO, SISTEMAS_EQUIPAMENTO, withValorAtual } from "@/lib/catalogos";
 
 type Localizacao = { id: string; codigo: string; descricao: string };
 
@@ -20,6 +21,7 @@ export default function EditarEquipamentoPage() {
   const [numeroSerie, setNumeroSerie] = useState("");
   const [codigoTrensurb, setCodigoTrensurb] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [sistema, setSistema] = useState("OUTROS");
   const [compatibilidade, setCompatibilidade] = useState("SERIE_100");
   const [localizacaoId, setLocalizacaoId] = useState("");
   const [observacao, setObservacao] = useState("");
@@ -38,6 +40,7 @@ export default function EditarEquipamentoPage() {
       setNumeroSerie(equip.numeroSerie ?? "");
       setCodigoTrensurb(equip.codigoTrensurb ?? "");
       setDescricao(equip.descricao ?? "");
+      setSistema(equip.sistema ?? "OUTROS");
       setCompatibilidade(equip.compatibilidade ?? "SERIE_100");
       setLocalizacaoId(equip.localizacaoId ?? "");
       setObservacao(equip.observacao ?? "");
@@ -61,6 +64,7 @@ export default function EditarEquipamentoPage() {
       body: JSON.stringify({
         codigoTrensurb,
         descricao,
+        sistema,
         compatibilidade,
         localizacaoId: localizacaoId || null,
         observacao,
@@ -80,6 +84,7 @@ export default function EditarEquipamentoPage() {
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Carregando...</div>;
   }
+  const sistemaOptions = withValorAtual(SISTEMAS_EQUIPAMENTO, sistema);
 
   return (
     <div>
@@ -139,6 +144,23 @@ export default function EditarEquipamentoPage() {
               <option value="SERIE_100">Série 100</option>
               <option value="SERIE_200">Série 200</option>
               <option value="AMBAS">Ambas as Séries</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Sistema <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={sistema}
+              onChange={(e) => setSistema(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {sistemaOptions.map((option) => (
+                <option key={option} value={option}>
+                  {LABELS_SISTEMA_EQUIPAMENTO[option] ?? option}
+                </option>
+              ))}
             </select>
           </div>
 

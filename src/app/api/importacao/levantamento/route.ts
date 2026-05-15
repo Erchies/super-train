@@ -3,11 +3,13 @@ import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { SISTEMAS_EQUIPAMENTO } from "@/lib/catalogos";
 
 type RowResult = { linha: number; status: "criado" | "atualizado" | "erro"; mensagem?: string; dados?: string };
 
 const COMPATIBILIDADES = ["SERIE_100", "SERIE_200", "AMBAS"];
 const STATUS_VALIDOS = ["EM_ESTOQUE", "INSTALADO_TUE", "AGUARDANDO_REPARO", "EM_REPARO", "SUCATA"];
+const SISTEMAS_VALIDOS = [...SISTEMAS_EQUIPAMENTO];
 
 function str(val: unknown): string {
   return val == null ? "" : String(val).trim();
@@ -163,6 +165,7 @@ export async function POST(req: NextRequest) {
       const numeroSerie = str(col(r, "NÂº SÃ©rie", "Numero Serie", "NÂº Serie", "N Serie", "numero_serie", "NÂ° SÃ©rie", "NÂ°Serie", "NS", "Serial"));
       let codigoTrensurb = str(col(r, "CÃ³digo Trensurb", "Codigo Trensurb", "CÃ³digo", "Codigo", "cod_trensurb", "COD"));
       const descricao = str(col(r, "DescriÃ§Ã£o", "Descricao", "DESCRIÃ‡ÃƒO", "DESCRICAO", "Nome", "NOME"));
+      const sistema = (str(col(r, "Sistema", "SISTEMA", "sistema")) || "OUTROS").toUpperCase();
       const compatibilidade = str(col(r, "Compatibilidade", "COMPATIBILIDADE", "Serie", "SÃ©rie", "serie")).toUpperCase();
       const status = str(col(r, "Status", "STATUS", "Estado", "ESTADO", "SituaÃ§Ã£o", "Situacao")).toUpperCase();
       const locCodigo = str(col(r, "CÃ³digo LocalizaÃ§Ã£o", "Codigo Localizacao", "LocalizaÃ§Ã£o", "Localizacao", "Local", "LOCAL")) || null;
@@ -176,6 +179,7 @@ export async function POST(req: NextRequest) {
       if (!numeroSerie) { resultadosEquipamentos.push({ linha, status: "erro", mensagem: "NÂº SÃ©rie obrigatÃ³rio" }); continue; }
 
       if (!descricao) { resultadosEquipamentos.push({ linha, status: "erro", mensagem: "DescriÃ§Ã£o obrigatÃ³ria", dados: numeroSerie }); continue; }
+      if (!(SISTEMAS_VALIDOS as readonly string[]).includes(sistema)) { resultadosEquipamentos.push({ linha, status: "erro", mensagem: `Sistema invÃ¡lido: ${sistema}`, dados: numeroSerie }); continue; }
       if (!COMPATIBILIDADES.includes(compatibilidade)) { resultadosEquipamentos.push({ linha, status: "erro", mensagem: `Compatibilidade invÃ¡lida: ${compatibilidade}`, dados: numeroSerie }); continue; }
       if (!STATUS_VALIDOS.includes(status)) { resultadosEquipamentos.push({ linha, status: "erro", mensagem: `Status invÃ¡lido: ${status}`, dados: numeroSerie }); continue; }
 
@@ -204,7 +208,7 @@ export async function POST(req: NextRequest) {
           await prisma.$transaction(async (tx) => {
             await tx.equipamento.update({
               where: { id: existente.id },
-              data: { codigoTrensurb, descricao, compatibilidade, status, localizacaoId: localizacao?.id ?? null, tueId: tue?.id ?? null, posicaoId: posicao?.id ?? null, funcaoId: funcao?.id ?? null, observacao },
+              data: { codigoTrensurb, descricao, sistema, compatibilidade, status, localizacaoId: localizacao?.id ?? null, tueId: tue?.id ?? null, posicaoId: posicao?.id ?? null, funcaoId: funcao?.id ?? null, observacao },
             });
             await tx.movimentacaoEquipamento.create({
               data: {
@@ -227,7 +231,7 @@ export async function POST(req: NextRequest) {
         } else {
           await prisma.$transaction(async (tx) => {
             const eq = await tx.equipamento.create({
-              data: { numeroSerie, codigoTrensurb, descricao, compatibilidade, status, localizacaoId: localizacao?.id ?? null, tueId: tue?.id ?? null, posicaoId: posicao?.id ?? null, funcaoId: funcao?.id ?? null, observacao },
+              data: { numeroSerie, codigoTrensurb, descricao, sistema, compatibilidade, status, localizacaoId: localizacao?.id ?? null, tueId: tue?.id ?? null, posicaoId: posicao?.id ?? null, funcaoId: funcao?.id ?? null, observacao },
             });
             await tx.movimentacaoEquipamento.create({
               data: {

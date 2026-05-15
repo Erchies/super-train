@@ -6,6 +6,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { FormError, AlertError, AlertSuccess } from "@/components/shared/form-error";
 import { criarEquipamentoAction } from "@/actions/equipamento.actions";
+import { LABELS_SISTEMA_EQUIPAMENTO, SISTEMAS_EQUIPAMENTO } from "@/lib/catalogos";
 import { LABELS_COMPATIBILIDADE } from "@/lib/utils";
 
 type FieldErrors = Record<string, string[]>;
@@ -58,6 +59,7 @@ export default function NovoEquipamentoPage() {
   }
 
   const compatibilidadeOptions = Object.entries(LABELS_COMPATIBILIDADE);
+  const sistemaOptions = SISTEMAS_EQUIPAMENTO;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -147,6 +149,26 @@ export default function NovoEquipamentoPage() {
               ))}
             </select>
             <FormError message={formState.errors.compatibilidade?.[0]} />
+          </div>
+
+          <div>
+            <label htmlFor="sistema" className="mb-1 block text-sm font-medium text-gray-700">
+              Sistema <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="sistema"
+              name="sistema"
+              required
+              defaultValue="OUTROS"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {sistemaOptions.map((sistema) => (
+                <option key={sistema} value={sistema}>
+                  {LABELS_SISTEMA_EQUIPAMENTO[sistema] ?? sistema}
+                </option>
+              ))}
+            </select>
+            <FormError message={formState.errors.sistema?.[0]} />
           </div>
 
           <div>

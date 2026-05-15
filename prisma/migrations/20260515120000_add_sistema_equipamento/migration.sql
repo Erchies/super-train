@@ -1,0 +1,1 @@
+ALTER TABLE "equipamentos" ADD COLUMN "sistema" TEXT NOT NULL DEFAULT 'OUTROS';
