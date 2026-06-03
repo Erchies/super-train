@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/session";
@@ -58,12 +58,17 @@ export async function criarMaterialAction(data: unknown): Promise<ActionResult<{
     return { success: false, error: "Dados inválidos", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const existente = await repo.buscarMaterialPorCodigo(parsed.data.codigoTrensurb);
-  if (existente) return { success: false, error: "Código Trensurb já cadastrado" };
+  try {
+    const existente = await repo.buscarMaterialPorCodigo(parsed.data.codigoTrensurb);
+    if (existente) return { success: false, error: "Código Trensurb já cadastrado" };
 
-  const material = await repo.criarMaterial(parsed.data);
-  revalidatePath("/materiais");
-  return { success: true, data: { id: material.id } };
+    const material = await repo.criarMaterial(parsed.data);
+    revalidatePath("/materiais");
+    return { success: true, data: { id: material.id } };
+  } catch (e) {
+    console.error("[Material] Erro ao criar:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
+  }
 }
 
 export async function atualizarMaterialAction(id: string, data: unknown): Promise<ActionResult> {
@@ -74,15 +79,25 @@ export async function atualizarMaterialAction(id: string, data: unknown): Promis
     return { success: false, error: "Dados inválidos", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  await repo.atualizarMaterial(id, parsed.data);
-  revalidatePath("/materiais");
-  revalidatePath(`/materiais/${id}`);
-  return { success: true, data: undefined };
+  try {
+    await repo.atualizarMaterial(id, parsed.data);
+    revalidatePath("/materiais");
+    revalidatePath(`/materiais/${id}`);
+    return { success: true, data: undefined };
+  } catch (e) {
+    console.error("[Material] Erro ao atualizar:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
+  }
 }
 
 export async function inativarMaterialAction(id: string): Promise<ActionResult> {
   await requireSession();
-  await repo.atualizarMaterial(id, { ativo: false });
-  revalidatePath("/materiais");
-  return { success: true, data: undefined };
+  try {
+    await repo.atualizarMaterial(id, { ativo: false });
+    revalidatePath("/materiais");
+    return { success: true, data: undefined };
+  } catch (e) {
+    console.error("[Material] Erro ao inativar:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
+  }
 }

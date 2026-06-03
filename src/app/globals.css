@@ -36,3 +36,108 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* ── Relatório de Turno — Estilos do documento ─────────────────────── */
+
+.relatorio-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #999;
+  outline: none;
+  padding: 1px 4px;
+  font-size: inherit;
+  font-family: inherit;
+  color: #000;
+  line-height: 1.4;
+}
+
+.relatorio-input:focus {
+  border-bottom-color: #2563eb;
+  background: #f0f4ff;
+}
+
+.relatorio-input::placeholder {
+  color: #bbb;
+  font-style: italic;
+}
+
+.relatorio-textarea {
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  padding: 4px 0;
+  font-size: inherit;
+  font-family: inherit;
+  color: #000;
+  line-height: 1.5;
+}
+
+.relatorio-textarea:focus {
+  background: #f8f9ff;
+}
+
+.relatorio-textarea::placeholder {
+  color: #bbb;
+  font-style: italic;
+}
+
+/* Tira a borda padrão do Tailwind dos inputs do relatório */
+.relatorio-turno-doc input,
+.relatorio-turno-doc textarea {
+  border-color: transparent;
+}
+
+.relatorio-turno-doc input:focus,
+.relatorio-turno-doc textarea:focus {
+  box-shadow: none;
+  ring: none;
+}
+
+/* Remove setas do input date no Chrome */
+.relatorio-turno-doc input[type="date"]::-webkit-inner-spin-button,
+.relatorio-turno-doc input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+}
+
+/* ── Print ─────────────────────────────────────────────────────────── */
+
+@media print {
+  /* Esconde tudo exceto o documento do relatório */
+  body > * {
+    visibility: hidden;
+  }
+
+  .relatorio-turno-doc {
+    visibility: visible;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-width: 1.5px !important;
+    font-size: 12px !important;
+  }
+
+  .relatorio-turno-doc * {
+    visibility: visible;
+  }
+
+  /* Inputs viram texto puro na impressão */
+  .relatorio-turno-doc input,
+  .relatorio-turno-doc textarea {
+    border-bottom: none !important;
+    background: transparent !important;
+  }
+
+  .relatorio-turno-doc input::placeholder,
+  .relatorio-turno-doc textarea::placeholder {
+    color: transparent !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}

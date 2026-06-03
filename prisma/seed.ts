@@ -141,7 +141,14 @@ async function main() {
     { nome: "TechRail Manutenção", tipo: "EXTERNA", contato: "(51) 3333-0002" },
   ];
   for (const oficina of oficinas) {
-    await prisma.oficina.create({ data: oficina }).catch(() => {});
+    const existente = await prisma.oficina.findFirst({
+      where: { nome: oficina.nome, tipo: oficina.tipo },
+    });
+    if (!existente) {
+      await prisma.oficina.create({ data: oficina });
+    } else {
+      console.log(`  Oficina "${oficina.nome}" já existe, pulando.`);
+    }
   }
 
   // ── Atividades ────────────────────────────────────────────────────────────

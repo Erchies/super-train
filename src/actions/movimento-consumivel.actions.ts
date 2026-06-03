@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { movimentacaoConsumivelSchema } from "@/domain/consumable/validations";
@@ -89,6 +89,7 @@ export async function registrarMovimentacaoConsumivelAction(
     if (e instanceof DomainError) {
       return { success: false, error: e.message };
     }
-    throw e;
+    console.error("[MovConsum] Erro inesperado:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
   }
 }

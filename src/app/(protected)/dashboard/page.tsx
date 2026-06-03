@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { listarMateriaisAbaixoMinimo } from "@/repositories/material.repository";
 import { contarEquipamentosPorStatus } from "@/repositories/equipamento.repository";
 import Link from "next/link";
@@ -13,7 +13,11 @@ export default async function DashboardPage() {
     prisma.movimentacaoEquipamento.findMany({
       take: 10,
       orderBy: { criadoEm: "desc" },
-      include: {
+      select: {
+        id: true,
+        equipamentoId: true,
+        statusNovo: true,
+        realizadoEm: true,
         equipamento: { select: { numeroSerie: true, descricao: true } },
         usuario: { select: { nome: true } },
       },

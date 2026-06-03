@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -22,7 +22,9 @@ type NavItem = {
   label: string;
   href?: string;
   icon: React.ElementType;
-  children?: { label: string; href: string }[];
+  /** Perfil mínimo necessário para ver este item. Ausente = todos. */
+  perfilMinimo?: "SUPERVISOR" | "ADMIN";
+  children?: { label: string; href: string; perfilMinimo?: "SUPERVISOR" | "ADMIN" }[];
 };
 
 const navItems: NavItem[] = [
@@ -66,7 +68,7 @@ const navItems: NavItem[] = [
       { label: "Posições", href: "/cadastros/posicoes" },
       { label: "Oficinas", href: "/cadastros/oficinas" },
       { label: "Atividades", href: "/cadastros/atividades" },
-      { label: "Usuários", href: "/cadastros/usuarios" },
+      { label: "Usuários", href: "/cadastros/usuarios", perfilMinimo: "ADMIN" },
     ],
   },
   {
@@ -98,10 +100,21 @@ const navItems: NavItem[] = [
       { label: "Dashboard do plantão", href: "/relatorios-turno/dashboard" },
     ],
   },
-  { label: "Auditoria", href: "/auditoria", icon: Shield },
+  { label: "Auditoria", href: "/auditoria", icon: Shield, perfilMinimo: "SUPERVISOR" },
 ];
 
-export function Sidebar() {
+const PERFIL_NIVEL: Record<string, number> = {
+  OPERADOR: 1,
+  SUPERVISOR: 2,
+  ADMIN: 3,
+};
+
+function temAcesso(perfil: string, perfilMinimo?: string): boolean {
+  if (!perfilMinimo) return true;
+  return (PERFIL_NIVEL[perfil] ?? 0) >= (PERFIL_NIVEL[perfilMinimo] ?? 99);
+}
+
+export function Sidebar({ perfil = "OPERADOR" }: { perfil?: string }) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>(["Materiais", "Equipamentos"]);
 
@@ -110,6 +123,14 @@ export function Sidebar() {
       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
     );
   }
+
+  // Filtra itens de navegação baseado no perfil do usuário
+  const filteredNavItems = navItems
+    .filter((item) => temAcesso(perfil, item.perfilMinimo))
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter((child) => temAcesso(perfil, child.perfilMinimo)),
+    }));
 
   return (
     <div className="flex w-64 flex-col border-r border-gray-200 bg-white">
@@ -126,7 +147,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           if (item.href) {
             return (
               <Link
@@ -145,8 +166,11 @@ export function Sidebar() {
             );
           }
 
+          const visibleChildren = item.children ?? [];
+          if (visibleChildren.length === 0) return null;
+
           const isOpen = openGroups.includes(item.label);
-          const hasActive = item.children?.some((c) => pathname.startsWith(c.href));
+          const hasActive = visibleChildren.some((c) => pathname.startsWith(c.href));
 
           return (
             <div key={item.label} className="mb-1">
@@ -164,7 +188,7 @@ export function Sidebar() {
 
               {isOpen && (
                 <div className="mt-1 ml-7 space-y-1">
-                  {item.children?.map((child) => (
+                  {visibleChildren.map((child) => (
                     <Link
                       key={child.href}
                       href={child.href}

@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/session";
@@ -59,12 +59,17 @@ export async function criarEquipamentoAction(data: unknown): Promise<ActionResul
     return { success: false, error: "Dados inválidos", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const existente = await repo.buscarEquipamentoPorSerie(parsed.data.numeroSerie);
-  if (existente) return { success: false, error: "Número de série já cadastrado" };
+  try {
+    const existente = await repo.buscarEquipamentoPorSerie(parsed.data.numeroSerie);
+    if (existente) return { success: false, error: "Número de série já cadastrado" };
 
-  const equip = await repo.criarEquipamento(parsed.data);
-  revalidatePath("/equipamentos");
-  return { success: true, data: { id: equip.id } };
+    const equip = await repo.criarEquipamento(parsed.data);
+    revalidatePath("/equipamentos");
+    return { success: true, data: { id: equip.id } };
+  } catch (e) {
+    console.error("[Equipamento] Erro ao criar:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
+  }
 }
 
 export async function atualizarEquipamentoAction(id: string, data: unknown): Promise<ActionResult> {
@@ -75,10 +80,15 @@ export async function atualizarEquipamentoAction(id: string, data: unknown): Pro
     return { success: false, error: "Dados inválidos", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  await repo.atualizarEquipamento(id, parsed.data);
-  revalidatePath("/equipamentos");
-  revalidatePath(`/equipamentos/${id}`);
-  return { success: true, data: undefined };
+  try {
+    await repo.atualizarEquipamento(id, parsed.data);
+    revalidatePath("/equipamentos");
+    revalidatePath(`/equipamentos/${id}`);
+    return { success: true, data: undefined };
+  } catch (e) {
+    console.error("[Equipamento] Erro ao atualizar:", e);
+    return { success: false, error: "Erro interno do servidor. Tente novamente." };
+  }
 }
 
 export async function inativarEquipamentoAction(id: string): Promise<ActionResult> {
